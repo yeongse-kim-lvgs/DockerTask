@@ -8,8 +8,8 @@ services:
     volumes:
       - ./src:/app
     working_dir: /app
-    # command: sh -c 'npx tsc; npx tsc --watch ./**/*.ts; npm run dev'
-    command: sh -c 'npx tsc; npm run dev'
+    command: sh -c 'npm run dev && npx tsc --watch' ## for dev
+    # command: sh -c 'npm run start' ## for show off
 
   db:
     image: mysql
