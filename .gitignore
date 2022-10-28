@@ -16,3 +16,4 @@ benchmarks/graphs
 
 .history
 .env
+.DS_Store
