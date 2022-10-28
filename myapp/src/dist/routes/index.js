@@ -19,6 +19,7 @@ const connection = mysql.createConnection({
     database: 'DockerTask'
 });
 connection.connect();
+// define functions to manipulate data
 function getDataFromSpreadsheet() {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
@@ -40,29 +41,60 @@ function getDataFromSpreadsheet() {
 }
 function insertIntoDatabaseFromSpreadsheet(connection) {
     return __awaiter(this, void 0, void 0, function* () {
-        getDataFromSpreadsheet()
-            .then((data) => {
-            data.rows.forEach((row) => {
-                let sql = `INSERT INTO animals (name, age, salary) VALUES ("${row.name}", ${row.age}, ${row.salary});`;
-                connection.query(sql, (err, results, fields) => {
-                    if (err)
-                        throw err;
-                    console.log(`${sql} is executed`);
+        const data = yield getDataFromSpreadsheet();
+        data.rows.forEach((row) => {
+            let sql = `INSERT INTO animals (name, age, salary) VALUES ("${row.name}", ${row.age}, ${row.salary});`;
+            connection.query(sql, (err, results, fields) => {
+                if (err)
+                    throw err;
+                console.log(`${sql} is executed`);
+            });
+        });
+    });
+}
+function deleteAllDataFromSQL(connection) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const removeSQL = 'TRUNCATE animals;';
+        connection.query(removeSQL, (err, results, fields) => {
+            if (err)
+                throw err;
+            console.log('all data removed');
+        });
+    });
+}
+function getAllDataFromMySQL(connection) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const selectSQL = 'SELECT * FROM animals;';
+        return yield new Promise((resolve, reject) => {
+            connection.query(selectSQL, (error, results, fields) => {
+                resolve({
+                    results
                 });
             });
         });
     });
 }
+// routing
 router.get('/', function (req, res, next) {
-    const selectSQL = 'SELECT * FROM animals;';
-    // insertIntoDatabaseFromSpreadsheet(connection);
-    connection.query(selectSQL, (err, results, fields) => {
-        if (err)
-            throw err;
-        console.log(results);
+    getAllDataFromMySQL(connection)
+        .then((data) => {
+        console.log(data.results);
+        res.render('index', {
+            title: 'DockerTask',
+            animals: data.results
+        });
     });
-    res.render('index', {
-        title: 'DockerTask',
+});
+router.get('/add', function (req, res, next) {
+    insertIntoDatabaseFromSpreadsheet(connection)
+        .then(() => {
+        res.redirect('/');
+    });
+});
+router.get('/delete', function (req, res, next) {
+    deleteAllDataFromSQL(connection)
+        .then(() => {
+        res.redirect('/');
     });
 });
 module.exports = router;

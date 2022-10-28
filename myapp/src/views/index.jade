@@ -2,4 +2,26 @@ extends layout
 
 block content
   h1= title
-  p Welcome to #{title}
+  p Welcome to DockerTask from Yeongse Kim. 
+  p Fetch data from Spreadsheet and insert them into database. 
+  button 
+    a(href="/add", style="color: black; text-decoration: none;") Fetch data from Spreadsheet
+  button 
+    a(href="/delete", style="color: black; text-decoration: none;") Delete data from Spreadsheet
+
+  if animals.length == 0
+    p No data in database. 
+  else 
+    table(border="1")
+      thead
+        tr
+          th name
+          th age
+          th salary
+      tbody 
+        for animal in animals 
+          tr 
+            td #{animal.name}
+            td #{animal.age} 
+            td #{animal.salary}  
+   

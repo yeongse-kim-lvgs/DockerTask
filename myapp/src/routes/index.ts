@@ -11,6 +11,8 @@ const connection = mysql.createConnection({
 })
 connection.connect()
 
+
+// define functions to manipulate data
 async function getDataFromSpreadsheet() {
   require('dotenv').config();
   const { GoogleSpreadsheet } = require('google-spreadsheet');
@@ -29,33 +31,59 @@ async function getDataFromSpreadsheet() {
 }
 
 async function insertIntoDatabaseFromSpreadsheet(connection: any) {
-
-  getDataFromSpreadsheet()
-  .then((data: any) => {
-    data.rows.forEach((row: any) => {
-      let sql = `INSERT INTO animals (name, age, salary) VALUES ("${row.name}", ${row.age}, ${row.salary});`
-      connection.query(sql, (err: any, results: any, fields: any) => {
-        if (err) throw err;
-        console.log(`${sql} is executed`)
-      })
+  const data = await getDataFromSpreadsheet()
+  data.rows.forEach((row: any) => {
+    let sql = `INSERT INTO animals (name, age, salary) VALUES ("${row.name}", ${row.age}, ${row.salary});`
+    connection.query(sql, (err: any, results: any, fields: any) => {
+      if (err) throw err;
+      console.log(`${sql} is executed`)
     })
-  }
-  )
+  })
 }
 
-router.get('/', function(req: any, res: any, next: any) {
+async function deleteAllDataFromSQL(connection: any) {
+  const removeSQL = 'TRUNCATE animals;'
+    connection.query(removeSQL, (err: any, results: any, fields: any) => {
+      if (err) throw err;
+      console.log('all data removed')
+  }) 
+}
 
+async function getAllDataFromMySQL(connection: any) {
   const selectSQL = 'SELECT * FROM animals;'
+  return await new Promise((resolve, reject) => {
+    connection.query(selectSQL, (error: any, results: any, fields: any) => {
+      resolve({
+        results
+      });
+    });
+  })
+}
 
-  // insertIntoDatabaseFromSpreadsheet(connection);
-  
-  connection.query(selectSQL, (err: any, results: any, fields: any) => {
-    if (err) throw err;
-    console.log(results)
-  });
-  
-  res.render('index', {
-    title: 'DockerTask', 
+
+// routing
+router.get('/', function(req: any, res: any, next: any) {
+  getAllDataFromMySQL(connection)
+  .then((data: any) => {
+    console.log(data.results)
+    res.render('index', {
+      title: 'DockerTask', 
+      animals: data.results
+    })
+  })
+})
+
+router.get('/add', function(req: any, res: any, next: any) {
+  insertIntoDatabaseFromSpreadsheet(connection)
+  .then(()=>{
+    res.redirect('/')
+  })
+})
+
+router.get('/delete', function(req: any, res: any, next: any) {
+  deleteAllDataFromSQL(connection)
+  .then(()=>{
+    res.redirect('/')
   })
 })
 
