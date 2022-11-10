@@ -16,6 +16,7 @@ block content
           th age
           th salary
           th 
+          th
       tbody 
         for animal in animals 
           tr
@@ -24,5 +25,13 @@ block content
             td #{animal.age} 
             td #{animal.salary} 
             td 
-              a(href="/edit/#{animal.id}", style="text-decoration: none;").btn.btn-primary edit
+              a(href="/edit/#{animal.id}", style="text-decoration: none;").btn.btn-success edit
+            td 
+              a(href="/delete/#{animal.id}", style="text-decoration: none;").btn.btn-danger delete
+
+  table.table 
+    tr 
+      td 
+        a(href="/create", style="text-decoration: none;").btn.btn-primary create new animal
+
   a(href="/", style="text-decoration: none; margin-top:10px;").btn.btn-primary Back

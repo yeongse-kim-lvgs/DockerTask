@@ -79,14 +79,32 @@ function getAllDataFromMySQL(connection) {
 function updateAnimal(value) {
     return __awaiter(this, void 0, void 0, function* () {
         const data = yield getDataFromSpreadsheet();
-        console.log(value);
-        console.log(value.id);
         const animalForEdit = data.rows.find(animal => animal.id === value.id);
         const keys = Object.keys(value);
         keys.forEach((key) => {
             animalForEdit[key] = value[key];
         });
         yield animalForEdit.save();
+    });
+}
+function deleteAnimal(id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const data = yield getDataFromSpreadsheet();
+        const animalForDelete = data.rows.find(animal => animal.id === id);
+        yield animalForDelete.delete();
+    });
+}
+function createAnimal(value) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const data = yield getDataFromSpreadsheet();
+        const lastAnimal = data.rows.slice(-1)[0];
+        const newAnimal = {
+            id: Number(lastAnimal.id) + 1,
+            name: value.name,
+            age: value.age,
+            salary: value.salary
+        };
+        yield data.sheet.addRow(newAnimal);
     });
 }
 // routing
@@ -105,7 +123,7 @@ router.get('/add', function (req, res, next) {
         res.redirect('/');
     });
 });
-router.get('/delete', function (req, res, next) {
+router.get('/clear', function (req, res, next) {
     deleteAllDataFromSQL(connection)
         .then(() => {
         res.redirect('/');
@@ -123,6 +141,21 @@ router.get('/change', function (req, res, next) {
         });
     });
 });
+router.get('/create', function (req, res, next) {
+    res.render('create', {});
+});
+router.post('/create', function (req, res, next) {
+    createAnimal(req.body)
+        .then(() => {
+        res.redirect('/change');
+    });
+});
+router.get('/delete/:id', function (req, res, next) {
+    deleteAnimal(req.params.id)
+        .then(() => {
+        res.redirect('/change');
+    });
+});
 router.get('/edit/:id', function (req, res, next) {
     getDataFromSpreadsheet()
         .then((data) => {
@@ -131,11 +164,9 @@ router.get('/edit/:id', function (req, res, next) {
             animals.push({ id: row.id, name: row.name, age: row.age, salary: row.salary });
         });
         const animalIdForEdit = req.params.id;
-        const animalForEdit = animals.filter(function (animal) {
-            return animal.id === animalIdForEdit;
-        });
+        const animalForEdit = animals.find(animal => animal.id === animalIdForEdit);
         res.render('edit', {
-            animal: animalForEdit[0]
+            animal: animalForEdit
         });
     });
 });

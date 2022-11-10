@@ -78,8 +78,6 @@ async function getAllDataFromMySQL(connection: any) {
 
 async function updateAnimal(value: Animal) {
   const data = await getDataFromSpreadsheet()
-  console.log(value)
-  console.log(value.id)
   const animalForEdit = data.rows.find(animal => animal.id === value.id)
 
   const keys = Object.keys(value) as (keyof Animal)[]
@@ -88,6 +86,26 @@ async function updateAnimal(value: Animal) {
   })
 
   await animalForEdit.save()
+}
+
+async function deleteAnimal(id: number) {
+  const data = await getDataFromSpreadsheet()
+  const animalForDelete = data.rows.find(animal => animal.id === id)
+  await animalForDelete.delete()
+}
+
+async function createAnimal(value: Animal) {
+  const data = await getDataFromSpreadsheet()
+  const lastAnimal = data.rows.slice(-1)[0]
+
+  
+  const newAnimal: Animal = {
+    id: Number(lastAnimal.id)+1, 
+    name: value.name, 
+    age: value.age, 
+    salary: value.salary
+  }
+  await data.sheet.addRow(newAnimal)
 }
 
 // routing
@@ -108,7 +126,7 @@ router.get('/add', function(req: any, res: any, next: any) {
   })
 })
 
-router.get('/delete', function(req: any, res: any, next: any) {
+router.get('/clear', function(req: any, res: any, next: any) {
   deleteAllDataFromSQL(connection)
   .then(()=>{
     res.redirect('/')
@@ -129,6 +147,23 @@ router.get('/change', function(req: any, res: any, next: any) {
   })
 })
 
+router.get('/create', function(req: any, res: any, next: any) {
+  res.render('create', {})
+})
+router.post('/create', function(req: any, res: any, next: any) {
+  createAnimal(req.body)
+  .then(() => {
+    res.redirect('/change')
+  })
+})
+
+router.get('/delete/:id', function(req: any, res: any, next: any) {
+  deleteAnimal(req.params.id)
+  .then(() => {
+    res.redirect('/change')
+  })
+})
+
 router.get('/edit/:id', function (req: any, res: any, next: any) {
   getDataFromSpreadsheet()
   .then((data: SpreadsheetData) => {
@@ -138,16 +173,13 @@ router.get('/edit/:id', function (req: any, res: any, next: any) {
     })
 
     const animalIdForEdit = req.params.id;
-    const animalForEdit = animals.filter(function(animal) {
-      return animal.id === animalIdForEdit
-    })
+    const animalForEdit = animals.find(animal => animal.id === animalIdForEdit)
 
     res.render('edit', {
-      animal: animalForEdit[0]
+      animal: animalForEdit
     })
   })
 })
-
 router.post('/edit/:id', function (req: any, res: any, next: any) {
   updateAnimal(req.body)
   .then(() => {
