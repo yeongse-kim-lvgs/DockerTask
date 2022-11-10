@@ -8,8 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+// default settings
 var express = require('express');
 var router = express.Router();
+// settings which enable POST
 /* GET db */
 const mysql = require('mysql');
 const connection = mysql.createConnection({
@@ -47,7 +49,7 @@ function insertIntoDatabaseFromSpreadsheet(connection) {
             connection.query(sql, (err, results, fields) => {
                 if (err)
                     throw err;
-                console.log(`${sql} is executed`);
+                // console.log(`${sql} is executed`)
             });
         });
     });
@@ -74,11 +76,23 @@ function getAllDataFromMySQL(connection) {
         });
     });
 }
+function updateAnimal(value) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const data = yield getDataFromSpreadsheet();
+        console.log(value);
+        console.log(value.id);
+        const animalForEdit = data.rows.find(animal => animal.id === value.id);
+        const keys = Object.keys(value);
+        keys.forEach((key) => {
+            animalForEdit[key] = value[key];
+        });
+        yield animalForEdit.save();
+    });
+}
 // routing
 router.get('/', function (req, res, next) {
     getAllDataFromMySQL(connection)
         .then((data) => {
-        console.log(data.results);
         res.render('index', {
             title: 'DockerTask',
             animals: data.results
@@ -95,6 +109,40 @@ router.get('/delete', function (req, res, next) {
     deleteAllDataFromSQL(connection)
         .then(() => {
         res.redirect('/');
+    });
+});
+router.get('/change', function (req, res, next) {
+    getDataFromSpreadsheet()
+        .then((data) => {
+        let animals = [];
+        data.rows.forEach((row) => {
+            animals.push({ id: row.id, name: row.name, age: row.age, salary: row.salary });
+        });
+        res.render('change', {
+            animals: animals
+        });
+    });
+});
+router.get('/edit/:id', function (req, res, next) {
+    getDataFromSpreadsheet()
+        .then((data) => {
+        let animals = [];
+        data.rows.forEach((row) => {
+            animals.push({ id: row.id, name: row.name, age: row.age, salary: row.salary });
+        });
+        const animalIdForEdit = req.params.id;
+        const animalForEdit = animals.filter(function (animal) {
+            return animal.id === animalIdForEdit;
+        });
+        res.render('edit', {
+            animal: animalForEdit[0]
+        });
+    });
+});
+router.post('/edit/:id', function (req, res, next) {
+    updateAnimal(req.body)
+        .then(() => {
+        res.redirect('/change');
     });
 });
 module.exports = router;

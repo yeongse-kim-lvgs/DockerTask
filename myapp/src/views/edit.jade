@@ -1,0 +1,42 @@
+extends layout
+
+block content
+    h4 Change values you want to edit and submit form
+
+    table.table.table-striped.table-bordered
+        caption Before
+        thead
+            tr
+                th id
+                th name
+                th age
+                th salary
+        tbody
+            tr
+                td #{animal.id}
+                td #{animal.name}
+                td #{animal.age} 
+                td #{animal.salary}
+
+    form(method='POST' action='/edit/id').form-control
+        table.table.table-bordered
+            caption After(Change ID is not allowed)
+            thead.table-light
+                tr
+                    th id
+                    th name
+                    th age
+                    th salary
+            tbody
+                tr
+                    td #{animal.id}
+                        input(type='hidden' name='id' value='#{animal.id}')
+                    td
+                        input(type='text' name='name' value='#{animal.name}')
+                    td
+                        input(type='number' name='age' value='#{animal.age}')
+                    td
+                        input(type='number' name='salary' value='#{animal.salary}')
+        input(type='submit' value='edit data').btn.btn-primary
+    
+    a(href="/change", style="text-decoration: none; margin-top:10px;").btn.btn-primary Back
